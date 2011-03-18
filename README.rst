@@ -5,6 +5,12 @@ Convore.vim
 Convore.vim is a vim plugin- reader for convore, in early alpha at the moment.
 If you want to try it, put it in your "plugins" folder or :source it.
 
+.. image:: http://i.imgur.com/bC0FZ.png
+
+.. image:: http://i.imgur.com/hAw2o.png
+
+.. image:: http://i.imgur.com/Lm3Bp.png
+
 Usage
 =====
 
