@@ -13,7 +13,6 @@ if !exists('g:convore_api_timeout')
 endif
 
 let g:convore_scratch_buffer = 'CONVORE'
-
 function! s:ConvoreScratchBufferOpen(name)
     
     let scr_bufnum = bufnr(a:name)
@@ -45,7 +44,10 @@ endfunction
 
 python << EOF
 import urllib2, base64, exceptions, vim 
-import json
+try:
+    import simplejson as json
+except ImportError:
+    import json
 
 DEFAULT_SCRATCH_NAME = vim.eval('g:convore_scratch_buffer')
 USERNAME = vim.eval('g:convore_user')
@@ -98,17 +100,24 @@ for group in groups:
 EOF
 endfunction
 
-function! ConvoreTopicsList()
+function! ConvoreTopicsList(...)
 python << EOF
 import vim
-import re
 
-line = vim.current.line
-group_re = re.search("\(convore_gid:([0-9]+)\)", line)
-if group_re:
-    gn_re = re.search("^(.*) > Topics: [0-9]+", line)
-    group_name = gn_re.group(1)
-    group_id = group_re.group(1)
+if int(vim.eval("a:0")) > 1:
+    group_id = vim.eval("a:1")
+    group_name = vim.eval("a:2")
+else:
+    line = vim.current.line
+    group_re = re.search("\(convore_gid:([0-9]+)\)", line)
+    if group_re:
+        gn_re = re.search("^(.*) > Topics: [0-9]+", line)
+        group_name = gn_re.group(1)
+        group_id = group_re.group(1)
+
+if group_name and group_id:
+    vim.command("let g:convore_current_group_id=%s" % group_id)
+    vim.command("let g:convore_current_group_name='%s'" % group_name)
     topics = request(CONVORE_URL + "/api/groups/%s/topics.json" % group_id).get("topics")
     scratch_buffer()
     del vim.current.buffer[:]
@@ -125,10 +134,11 @@ if group_re:
                                 topic_url, topic_id))
         vim.current.buffer.append(79 * "-")
         vim.command("map <buffer> <CR> <Esc>:call ConvoreMessagesList()<CR>")
+        vim.command("map <buffer> b <Esc>:call ConvoreGroupsList()<CR>")
 EOF
 endfunction
 
-function! ConvoreMessagesList()
+function! ConvoreMessagesList(...)
 python << EOF
 import vim
 import re, datetime
@@ -139,14 +149,17 @@ if topic_re:
     tn_re = re.search("^(.*) > Messages: [0-9]+", line)
     topic_name = tn_re.group(1)
     topic_id = topic_re.group(1)
+
+    vim.command("let g:convore_current_topic_id=%s" % topic_id)
+    vim.command("let g:convore_current_topic_name='%s'" % topic_name)
     messages = request(CONVORE_URL + "/api/topics/%s/messages.json" % topic_id).get("messages")
     scratch_buffer()
     del vim.current.buffer[:]
     vim.current.buffer[0] = 'MESSAGES IN TOPIC "%s"' % topic_name 
     vim.current.buffer.append(79 * "-")
     for message in messages:
-        body = message.get("message").encode('utf-8')
-        user = message.get("user").get("username").encode("utf-8").replace("\n", " ")
+        body = message.get("message").encode('utf-8').replace("\n", " ")
+        user = message.get("user").get("username").encode("utf-8")        
         date_created = datetime.datetime.fromtimestamp(message.get("date_created")).strftime("%a %b %d %H:%M:%S %Y")
         stars = message.get("stars")
         message_id = message.get("id").encode("utf-8")
@@ -154,6 +167,7 @@ if topic_re:
         vim.current.buffer.append("%s | %s | %s" % (user, date_created, ", ".join(["★" + star.get("user").get("username").encode("utf-8") for star in stars])))
         vim.current.buffer.append(79 * "-")
         vim.command("map <buffer> <CR> <Esc>:call ConvoreMessagesList()<CR>")
+        vim.command("map <buffer> b <Esc>:call ConvoreTopicsList(g:convore_current_group_id, g:convore_current_group_name)<CR>")
 EOF
 endfunction
 

@@ -15,11 +15,16 @@ groups. Go over a group and hit Return. That will show you a list of the topics
 in the group. If you hit Return while on top on a topic, it will list the
 messages in that topic.
 
+To get back from messages to topics or from topics to groups, press b when in 
+CONVORE buffer.
+
 Aditional Notes
 ===============
 
 The script is in a very early stage. Feel free to suggest stuff, comment
 and critique.
+
+I would really appreciate help with highlighting.
 
 You need vim compiled with +python support.
 
