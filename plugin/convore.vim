@@ -1,18 +1,46 @@
+"=============================================================================
+" File: convore.vim
+" Author: Dejan Noveski <dr.mote@gmail.com>
+" Last Change: 18-Mar-2011.
+" Version: 0.2
+" WebPage: http://github.com/dekomote/convore.vim
+" Description: Reader plugin for https://convore.com
+" Usage:
+"   Put the script in plugins dir, or :source it.
+"   :Convore - Opens your groups list
+"   Hit return on top of a group or topic to advance into it. Hit 'b' inside
+"   the buffer to go back from messages to topics and from topics to groups.
+"
+" Notes:
+"   Set g:convore_user and g:convore_password in the script or in .vimrc to
+"   your convore auth info.
+"   Requires vim compiled with +python.
+"
+"
+
+" Check if vim is compiled with python support.
 if !has('python')
     echo "Error: Required vim compiled with +python"
     finish
 endif
 
+" Set auth info here if you don't want to set it in .vimrc
+" .vimrc overrides this.
 if !exists('g:convore_user')
     let g:convore_user = ''
     let g:convore_password = ''
 endif
 
+" HTTP request timeout set to 20 seconds. If you have a very very slow
+" connection and you have issues with the requests, try bump this number up.
 if !exists('g:convore_api_timeout')
     let g:convore_api_timeout = 20
 endif
 
+" Everything is displayed in a scratch buffer named CONVORE.
 let g:convore_scratch_buffer = 'CONVORE'
+
+" Function that opens or navigates to the scratch buffer.
 function! s:ConvoreScratchBufferOpen(name)
     
     let scr_bufnum = bufnr(a:name)
@@ -31,17 +59,18 @@ function! s:ConvoreScratchBufferOpen(name)
     call ConvoreScratchBuffer()
 endfunction
 
-
+" After opening the scratch buffer, this sets some properties for it.
 function! ConvoreScratchBuffer()
     setlocal buftype=nofile
     setlocal bufhidden=hide
     setlocal noswapfile
     setlocal buflisted
     setlocal cursorline
+    setlocal filetype=rst
 endfunction
 
 
-
+" Define some python functions here
 python << EOF
 import urllib2, base64, exceptions, vim 
 try:
@@ -56,6 +85,8 @@ CONVORE_URL = 'https://convore.com'
 GROUPS_LIST_URL = CONVORE_URL + '/api/groups.json'
 
 def request(url):
+    """ Simple function for http requests using urllib2 """
+
     api_timeout = float(vim.eval('g:convore_api_timeout'))
 
     request = urllib2.Request(url)
@@ -70,21 +101,26 @@ def request(url):
         return None
 
 def scratch_buffer(sb_name = DEFAULT_SCRATCH_NAME):
+    """ Opens a scratch buffer from python """
     vim.command("call s:ConvoreScratchBufferOpen('%s')" % sb_name)
 EOF
 
 
+" Function that displays user's groups
+" Locally maps <CR> to call ConvoreTopicsList
 function! ConvoreGroupsList()
 python << EOF
 
 import vim
 groups = request(GROUPS_LIST_URL).get("groups")
 
+# Initialize the scratch buffer
 scratch_buffer()
 del vim.current.buffer[:]
 vim.current.buffer[0] = "%s's CONVORE GROUPS" % USERNAME
 vim.current.buffer.append(79 * "-")
 
+# Write group info in the buffer
 for group in groups:
     group_name = group.get("name").encode('utf-8')
     group_url = CONVORE_URL + group.get("url").encode('utf-8') 
@@ -100,6 +136,7 @@ for group in groups:
 EOF
 endfunction
 
+" Function that displays 
 function! ConvoreTopicsList(...)
 python << EOF
 import vim
