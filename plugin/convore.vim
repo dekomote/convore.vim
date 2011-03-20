@@ -72,7 +72,7 @@ endfunction
 
 " Define some python functions here
 python << EOF
-import urllib2, base64, exceptions, vim 
+import urllib2, base64, exceptions, vim, urllib 
 try:
     import simplejson as json
 except ImportError:
@@ -84,7 +84,7 @@ PASSWORD = vim.eval('g:convore_password')
 CONVORE_URL = 'https://convore.com'
 GROUPS_LIST_URL = CONVORE_URL + '/api/groups.json'
 
-def request(url):
+def request(url, post_data = None):
     """ Simple function for http requests using urllib2 """
 
     api_timeout = float(vim.eval('g:convore_api_timeout'))
@@ -94,7 +94,9 @@ def request(url):
                                 '\n', '')
     request.add_header("Authorization", "Basic %s" % base64auth)
     try:
-        response = urllib2.urlopen(request, None, api_timeout)
+        if post_data:
+            post_data = urllib.urlencode(post_data)
+        response = urllib2.urlopen(request, post_data, api_timeout)
         return json.loads(response.read())
     except exceptions.Exception, e:
         print e
@@ -208,4 +210,24 @@ if topic_re:
 EOF
 endfunction
 
+function! ConvoreCreateGroup(name, kind)
+python << EOF
+import vim
+
+group_name = vim.eval("a:name")
+group_kind = vim.eval("a:kind")
+create_url = CONVORE_URL + '/api/groups/create.json'
+
+resp = request(create_url, {"name": group_name, "kind": group_kind})
+if resp:
+    try:
+        group_id = resp.get("group").get("id").encode("utf-8")
+        vim.command("call ConvoreTopicsList('%s', '%s')" % (str(group_id), str(group_name),))
+    except Exception, e:
+        print e
+EOF
+endfunction
+
 command! -nargs=0 Convore call ConvoreGroupsList()
+command! -nargs=1 ConvoreCreateGroup call ConvoreCreateGroup("<args>", "public")
+command! -nargs=1 ConvoreCreatePrivateGroup call ConvoreCreateGroup("<args>", "private")

@@ -24,6 +24,15 @@ messages in that topic.
 To get back from messages to topics or from topics to groups, press b when in 
 CONVORE buffer.
 
+Group Management
+++++++++++++++++
+
+    :ConvoreCreateGroup <group_name> - Creates a public group
+
+    :ConvoreCreatePrivateGroup <group_name> - Creates a private group
+
+after the group is created, the user is directed to the group's display
+
 Aditional Notes
 ===============
 
