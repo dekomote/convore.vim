@@ -33,6 +33,26 @@ Group Management
 
 after the group is created, the user is directed to the group's display
 
+Topic Management
+++++++++++++++++
+
+    :ConvoreCreateTopic <topic_name> - Creates a topic
+
+Note: It's best if you are in a group context while creating a topic. The last 
+group listed will be used for the topic. That means, if you are on the display
+that lists the messages from a topic, the new topic will be created in the listed
+one's parent group.
+
+Directs you to the messages listing of the new topic.
+
+Messages
+++++++++
+
+    :ConvoreCreateMessage <message> - Write a message to the current topic
+
+Same goes here. The current or last listed topic will be used for the message.
+
+
 Aditional Notes
 ===============
 
