@@ -1,8 +1,8 @@
 "=============================================================================
 " File: convore.vim
 " Author: Dejan Noveski <dr.mote@gmail.com>
-" Last Change: 18-Mar-2011.
-" Version: 0.2
+" Last Change: 21-Mar-2011.
+" Version: 0.4
 " WebPage: http://github.com/dekomote/convore.vim
 " Description: Reader plugin for https://convore.com
 " Usage:
@@ -10,6 +10,8 @@
 "   :Convore - Opens your groups list
 "   Hit return on top of a group or topic to advance into it. Hit 'b' inside
 "   the buffer to go back from messages to topics and from topics to groups.
+"
+"   Check README for detailed instructions
 "
 " Notes:
 "   Set g:convore_user and g:convore_password in the script or in .vimrc to
@@ -204,16 +206,17 @@ if topic_name and topic_id:
     vim.current.buffer[0] = 'MESSAGES IN TOPIC ' + vim.eval("g:convore_current_group_name") + " > " + topic_name
     vim.current.buffer.append(79 * "#")
     for message in messages:
-        body = message.get("message").encode('utf-8').replace("\n", " ")
+        body = message.get("message").encode('utf-8')
         user = message.get("user").get("username").encode("utf-8")        
         date_created = datetime.datetime.fromtimestamp(message.get("date_created")).strftime("%a %b %d %H:%M:%S %Y")
         stars = message.get("stars")
         message_id = message.get("id").encode("utf-8")
-        vim.current.buffer.append(body)
+        vim.current.buffer.append(body.split("\n"))
         vim.current.buffer.append("%s | %s | %s" % (user, date_created, ", ".join(["★" + star.get("user").get("username").encode("utf-8") for star in stars])))
         vim.current.buffer.append(79 * "-")
     vim.command("map <buffer> b <Esc>:call ConvoreTopicsList(g:convore_current_group_id, g:convore_current_group_name)<CR>")
     vim.command("command! -nargs=1 ConvoreCreateMessage call ConvoreCreateMessage('%s', '<args>')" % topic_id)
+    vim.command("command! -nargs=0 ConvorePostCurrent call ConvorePostCurrent('%s')" % topic_id)
     vim.command("map <buffer> <CR> <Esc>ConvoreCreateMessage ")
 EOF
 endfunction
@@ -270,6 +273,13 @@ if resp:
         vim.command("call ConvoreMessagesList('%s', '%s')" % (str(topic_id), str(vim.eval("g:convore_current_topic_name")),))
     except Exception, e:
         print e
+EOF
+endfunction
+
+function! ConvorePostCurrent(topic_id)
+python << EOF
+import vim
+vim.command("call ConvoreCreateMessage('%s', '%s')" % (topic_id, ("\n".join(vim.current.buffer)).replace("'","`"),))
 EOF
 endfunction
 
