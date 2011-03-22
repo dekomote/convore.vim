@@ -49,6 +49,7 @@ Messages
 ++++++++
 
     :ConvoreCreateMessage <message> - Write a message to the current topic
+    
     :ConvorePostCurrent - Posts the current buffer, preserving newlines
 
 Same goes here. The current or last listed topic will be used for the message.
