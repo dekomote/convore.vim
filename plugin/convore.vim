@@ -107,6 +107,13 @@ def request(url, post_data = None):
 def scratch_buffer(sb_name = DEFAULT_SCRATCH_NAME):
     """ Opens a scratch buffer from python """
     vim.command("call s:ConvoreScratchBufferOpen('%s')" % sb_name)
+
+def utf8_code(code):
+    enc = vim.eval('&fenc') or vim.eval('&enc')
+    return code.decode(enc, 'ignore').encode('utf-8')
+
+def escape_dbl_quotes(msg):
+    return msg.replace('"', '\\"')
 EOF
 
 
@@ -270,7 +277,7 @@ create_url = CONVORE_URL + '/api/topics/%s/messages/create.json' % topic_id
 resp = request(create_url, {"message": message, "topic_id": topic_id})
 if resp:
     try:
-        vim.command("call ConvoreMessagesList('%s', '%s')" % (str(topic_id), str(vim.eval("g:convore_current_topic_name")),))
+        vim.command('call ConvoreMessagesList("%s", "%s")' % (topic_id, vim.eval("g:convore_current_topic_name"),))
     except Exception, e:
         print e
 EOF
@@ -286,7 +293,7 @@ if int(vim.eval('a:count')):
 else:
     code = '\n'.join(vim.current.buffer)
 
-vim.command("call ConvoreCreateMessage('%s', '%s')" % (topic_id, code.encode("utf-8").replace("'","`"),))
+vim.command('call ConvoreCreateMessage("%s", "%s")' % (topic_id, utf8_code(code).replace('"','\\"'),))
 EOF
 endfunction
 
