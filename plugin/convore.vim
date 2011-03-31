@@ -216,7 +216,7 @@ if topic_name and topic_id:
         vim.current.buffer.append(79 * "-")
     vim.command("map <buffer> b <Esc>:call ConvoreTopicsList(g:convore_current_group_id, g:convore_current_group_name)<CR>")
     vim.command("command! -nargs=1 ConvoreCreateMessage call ConvoreCreateMessage('%s', '<args>')" % topic_id)
-    vim.command("command! -nargs=0 ConvorePostCurrent call ConvorePostCurrent('%s')" % topic_id)
+    vim.command("command! -nargs=* -range=0 ConvorePostCurrent call ConvorePostCurrent(<line1>, <line2>, <count>, '%s')" % topic_id)
     vim.command("map <buffer> <CR> <Esc>ConvoreCreateMessage ")
 EOF
 endfunction
@@ -276,10 +276,17 @@ if resp:
 EOF
 endfunction
 
-function! ConvorePostCurrent(topic_id)
+function! ConvorePostCurrent(line1, line2, count, topic_id)
 python << EOF
 import vim
-vim.command("call ConvoreCreateMessage('%s', '%s')" % (topic_id, ("\n".join(vim.current.buffer)).replace("'","`"),))
+rng_start = int(vim.eval('a:line1')) - 1
+rng_end = int(vim.eval('a:line2'))
+if int(vim.eval('a:count')):
+    code = '\n'.join(vim.current.buffer[rng_start:rng_end])
+else:
+    code = '\n'.join(vim.current.buffer)
+
+vim.command("call ConvoreCreateMessage('%s', '%s')" % (topic_id, code.encode("utf-8").replace("'","`"),))
 EOF
 endfunction
 
