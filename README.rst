@@ -14,7 +14,10 @@ If you want to try it, put it in your "plugins" folder or :source it.
 Usage
 =====
 
-You need to set g:convore_user and g:convore_password in your .vimrc
+You need to set g:convore_user and g:convore_password in your .vimrc:
+
+    let g:convore_user="your_convore_username"
+    let g:convore_password="your_convore_password"
 
 After that, just do ":Convore". That will show you a buffer with a list of your 
 groups. Go over a group and hit Return. That will show you a list of the topics
