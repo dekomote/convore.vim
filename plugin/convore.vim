@@ -222,7 +222,7 @@ if topic_name and topic_id:
         vim.current.buffer.append("%s | %s | %s" % (user, date_created, ", ".join(["★" + star.get("user").get("username").encode("utf-8") for star in stars])))
         vim.current.buffer.append(79 * "-")
     vim.command("map <buffer> b <Esc>:call ConvoreTopicsList(g:convore_current_group_id, g:convore_current_group_name)<CR>")
-    vim.command("command! -nargs=1 ConvoreCreateMessage call ConvoreCreateMessage('%s', '<args>')" % topic_id)
+    vim.command("command! -nargs=1 ConvoreCreateMessage call ConvoreCreateMessage('%s', \"<args>\")" % topic_id)
     vim.command("command! -nargs=* -range=0 ConvorePostCurrent call ConvorePostCurrent(<line1>, <line2>, <count>, '%s')" % topic_id)
     vim.command("map <buffer> <CR> <Esc>ConvoreCreateMessage ")
 EOF
@@ -266,15 +266,19 @@ if resp:
 EOF
 endfunction
 
-function! ConvoreCreateMessage(topic_id, message)
+function! ConvoreCreateMessage(topic_id, message, ...)
 python << EOF
 import vim
 
 topic_id = vim.eval("a:topic_id")
 message = vim.eval("a:message")
 create_url = CONVORE_URL + '/api/topics/%s/messages/create.json' % topic_id
+pasted = False
 
-resp = request(create_url, {"message": message, "topic_id": topic_id})
+if int(vim.eval("a:0")) > 0:
+    pasted = True
+
+resp = request(create_url, {"message": message, "topic_id": topic_id, "pasted": True})
 if resp:
     try:
         vim.command('call ConvoreMessagesList("%s", "%s")' % (topic_id, vim.eval("g:convore_current_topic_name"),))
@@ -293,7 +297,7 @@ if int(vim.eval('a:count')):
 else:
     code = '\n'.join(vim.current.buffer)
 
-vim.command('call ConvoreCreateMessage("%s", "%s")' % (topic_id, utf8_code(code).replace('"','\\"'),))
+vim.command('call ConvoreCreateMessage("%s", "%s", "true")' % (topic_id, utf8_code(code).replace('"','\\"'),))
 EOF
 endfunction
 
